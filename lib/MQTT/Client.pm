@@ -130,8 +130,12 @@ multi method retain (Str $topic, Str $message) {
 }
 
 method subscribe (Str $topic) returns Supply:D {
-    $!connection.write: mypack "C m/(C C n/a* C)", 0x82,
-        0, 0, $topic, 0;
+    state Int $packetID=1;
+    my $v= mypack "C m/(C C n/a* C)", 0x82, ($packetID +> 8)+& 0xFF, $packetID +& 0xFF, $topic, 1;
+    say $v;
+    $packetID++;
+    $packetID=1 if $packetID >= 65536;
+    $!connection.write: $v;
 
     my $regex = filter-as-regex($topic);
 
